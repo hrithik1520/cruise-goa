@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isEmailVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'hrithikmenezes@gmail.com' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    // --- Entities ---
+
+    // Users
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming());
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin()) && 
+                    isValidUser(incoming());
+      allow delete: if isAdmin();
+    }
+
+    function isValidUser(user) {
+      return user.email is string && user.email.size() <= 128 &&
+             user.role in ['admin', 'customer'];
+    }
+
+    // Cruises
+    match /cruises/{cruiseId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidCruise(incoming());
+      allow delete: if isAdmin();
+    }
+
+    function isValidCruise(cruise) {
+      return cruise.title is string && 
+             cruise.price is number && 
+             cruise.childPrice is number &&
+             cruise.imageUrl is string &&
+             (cruise.images is list || !cruise.keys().hasAll(['images']));
+    }
+
+    // Bookings
+    match /bookings/{bookingId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && 
+                    incoming().userId == request.auth.uid &&
+                    exists(/databases/$(database)/documents/cruises/$(incoming().cruiseId)) &&
+                    isValidBooking(incoming());
+      allow update: if isSignedIn() && (
+        (incoming().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'paymentIntentId'])) ||
+        isAdmin()
+      ) && isValidBooking(incoming());
+      allow delete: if isAdmin();
+    }
+
+    function isValidBooking(booking) {
+      return booking.cruiseId is string && isValidId(booking.cruiseId) &&
+             booking.userId is string && isValidId(booking.userId) &&
+             booking.date is string && booking.date.size() <= 20 &&
+             booking.adults is number && booking.adults >= 1 &&
+             booking.totalAmount is number && booking.totalAmount >= 0 &&
+             booking.status in ['pending', 'confirmed', 'cancelled'];
+    }
+  }
+}

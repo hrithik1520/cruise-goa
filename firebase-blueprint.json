@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "Cruise": {
+      "title": "Cruise",
+      "description": "A dinner cruise package",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "childPrice": { "type": "number" },
+        "duration": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "capacity": { "type": "number" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["title", "price", "childPrice", "imageUrl"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "A cruise reservation",
+      "type": "object",
+      "properties": {
+        "cruiseId": { "type": "string" },
+        "userId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "adults": { "type": "number" },
+        "children": { "type": "number" },
+        "infants": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"] },
+        "paymentIntentId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["cruiseId", "userId", "date", "adults", "totalAmount", "status"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile with roles",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "customer"] }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/cruises/{cruiseId}": {
+      "schema": "Cruise",
+      "description": "Public cruise listings"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Customer bookings"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and roles"
+    }
+  }
+}
