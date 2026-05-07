@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
+import logoUrl from "./assets/logo.png";
 import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "./lib/firebase";
@@ -108,7 +109,7 @@ function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <img src="/src/assets/logo.png" alt="Cruise Goa" className="h-10 w-auto" />
+              <img src={logoUrl} alt="Cruise Goa" className="h-10 w-auto" />
             </Link>
           </div>
 
@@ -208,7 +209,7 @@ function Footer() {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         <div>
           <div className="mb-4">
-            <img src="/src/assets/logo.png" alt="Cruise Goa" className="h-8 w-auto brightness-0 invert" />
+            <img src={logoUrl} alt="Cruise Goa" className="h-8 w-auto brightness-0 invert" />
           </div>
           <p className="text-sm leading-relaxed">
             Experience the magical sunset and luxurious dinner cruises in the heart of Goa. Premium service, authentic cuisine, and unforgettable memories.
